@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeno</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #09090f;
+            --surface: #111118;
+            --surface2: #18181f;
+            --border: rgba(255,255,255,0.07);
+            --border2: rgba(255,255,255,0.12);
+            --text: #f0f0f5;
+            --muted: #6b6b80;
+            --accent: #7c6ff7;
+            --accent2: #5b52e0;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            height: 56px;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .logo-mark {
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            background: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-mark svg { width: 16px; height: 16px; fill: white; }
+        .brand-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+        .brand-tag {
+            font-size: 10px; font-weight: 500;
+            color: var(--accent);
+            background: rgba(124,111,247,0.12);
+            padding: 2px 7px; border-radius: 20px;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .model-pill {
+            font-size: 11px; color: var(--muted);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 4px 10px; border-radius: 20px;
+        }
+        .clear-btn {
+            background: transparent;
+            border: 1px solid var(--border2);
+            color: var(--muted);
+            padding: 5px 12px; border-radius: 7px;
+            font-size: 12px; font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .clear-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .chat-wrap { flex: 1; overflow-y: auto; padding: 28px 20px; scroll-behavior: smooth; }
+        .chat-wrap::-webkit-scrollbar { width: 4px; }
+        .chat-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+        .messages {
+            max-width: 740px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 24px;
+        }
+        .msg { display: flex; gap: 12px; align-items: flex-start; }
+        .msg.user { flex-direction: row-reverse; }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; font-size: 12px;
+        }
+        .avatar.bot { background: var(--accent); }
+        .avatar.bot svg { width: 15px; height: 15px; fill: white; }
+        .avatar.user { background: var(--surface2); border: 1px solid var(--border2); color: var(--muted); }
+        .bubble {
+            max-width: 72%; padding: 12px 16px;
+            font-size: 14px; line-height: 1.75; border-radius: 12px;
+        }
+        .msg.bot .bubble {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 4px 12px 12px 12px;
+        }
+        .msg.user .bubble {
+            background: var(--accent);
+            border-radius: 12px 4px 12px 12px; color: white;
+        }
+        .bubble p { margin-bottom: 10px; }
+        .bubble p:last-child { margin-bottom: 0; }
+        .bubble ul, .bubble ol { padding-left: 18px; margin-bottom: 10px; }
+        .bubble li { margin-bottom: 3px; }
+        .bubble strong { color: #c4b5fd; font-weight: 600; }
+        .bubble h1, .bubble h2, .bubble h3 { color: #a78bfa; font-weight: 600; margin: 14px 0 6px; }
+        .bubble code:not(pre code) {
+            background: rgba(124,111,247,0.15); color: #c4b5fd;
+            padding: 1px 6px; border-radius: 4px; font-size: 12.5px;
+        }
+        .bubble pre {
+            background: #0c0c14 !important; border: 1px solid var(--border2);
+            border-radius: 8px; padding: 12px 14px; margin: 10px 0; overflow-x: auto;
+        }
+        .bubble pre code { font-size: 12.5px; background: transparent !important; padding: 0; }
+
+        .attached-preview {
+            max-width: 72%;
+            margin-bottom: 6px;
+            align-self: flex-end;
+        }
+        .attached-preview img {
+            max-height: 180px; max-width: 100%;
+            border-radius: 10px; border: 1px solid var(--border2);
+            display: block;
+        }
+        .attached-file-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--surface2); border: 1px solid var(--border2);
+            border-radius: 8px; padding: 8px 12px;
+            font-size: 13px; color: var(--text);
+        }
+        .attached-file-pill svg { width: 16px; height: 16px; fill: var(--accent); flex-shrink: 0; }
+
+        .typing-row { display: flex; gap: 12px; align-items: center; }
+        .dots {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 4px 12px 12px 12px;
+            padding: 14px 18px; display: flex; gap: 5px; align-items: center;
+        }
+        .dot {
+            width: 6px; height: 6px; background: var(--accent);
+            border-radius: 50%; animation: pulse 1.3s ease-in-out infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 60%, 100% { opacity: 0.3; transform: scale(0.9); }
+            30% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .input-area {
+            padding: 12px 20px 16px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .file-preview-bar {
+            max-width: 740px; margin: 0 auto 8px;
+            display: none; align-items: center; gap: 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 8px; padding: 8px 12px;
+        }
+        .file-preview-bar.visible { display: flex; }
+        .file-preview-bar img { height: 36px; width: 36px; object-fit: cover; border-radius: 4px; }
+        .file-preview-bar .file-name { font-size: 12px; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-preview-bar .file-type { font-size: 11px; color: var(--muted); }
+        .remove-file {
+            background: transparent; border: none; color: var(--muted);
+            cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px;
+            transition: color 0.15s;
+        }
+        .remove-file:hover { color: #f472b6; }
+
+        .input-box {
+            max-width: 740px; margin: 0 auto;
+            background: var(--surface); border: 1px solid var(--border2);
+            border-radius: 12px; display: flex; align-items: center;
+            gap: 8px; padding: 10px 14px; transition: border-color 0.15s;
+        }
+        .input-box:focus-within { border-color: var(--accent); }
+
+        .attach-btn {
+            background: transparent; border: none; cursor: pointer;
+            color: var(--muted); display: flex; align-items: center;
+            padding: 2px; transition: color 0.15s; flex-shrink: 0;
+        }
+        .attach-btn:hover { color: var(--accent); }
+        .attach-btn svg { width: 18px; height: 18px; }
+
+        .input-box input[type="text"] {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif;
+        }
+        .input-box input::placeholder { color: var(--muted); }
+
+        .send-btn {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--accent); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s, transform 0.1s; flex-shrink: 0;
+        }
+        .send-btn:hover { background: var(--accent2); }
+        .send-btn:active { transform: scale(0.95); }
+        .send-btn svg { width: 14px; height: 14px; fill: white; }
+
+        .hint { max-width: 740px; margin: 6px auto 0; font-size: 11px; color: var(--muted); text-align: center; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <div class="logo-mark">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <span class="brand-name">Zeno</span>
+        <span class="brand-tag">Beta</span>
+    </div>
+    <div class="header-right">
+        <span class="model-pill">Llama 3.3 · 70B</span>
+        <button class="clear-btn" onclick="clearChat()">New chat</button>
+    </div>
+</header>
+
+<div class="chat-wrap" id="chatWrap">
+    <div class="messages" id="messages">
+        <div class="msg bot">
+            <div class="avatar bot"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+            <div class="bubble">Hey, I'm <strong>Zeno</strong> — your AI assistant. Ask me anything, or upload an image or PDF!</div>
+        </div>
+    </div>
+</div>
+
+<div class="input-area">
+    <div class="file-preview-bar" id="filePreviewBar">
+        <img id="fileThumb" src="" alt="" style="display:none"/>
+        <svg id="filePdfIcon" viewBox="0 0 24 24" style="display:none;width:32px;height:32px;fill:#7c6ff7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM9 13h6v1H9v-1zm0 3h6v1H9v-1zm0-6h2v1H9v-1z"/></svg>
+        <div>
+            <div class="file-name" id="fileName"></div>
+            <div class="file-type" id="fileType"></div>
+        </div>
+        <button class="remove-file" onclick="removeFile()">✕</button>
+    </div>
+
+    <div class="input-box">
+        <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none" onchange="handleFile(this)"/>
+        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Attach image or PDF">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+        </button>
+        <input type="text" id="userInput" placeholder="Message Zeno..." autocomplete="off"/>
+        <button class="send-btn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+        </button>
+    </div>
+    <p class="hint">Zeno can make mistakes. Verify important information.</p>
+</div>
+
+<script>
+    const messagesEl = document.getElementById("messages");
+    const chatWrap = document.getElementById("chatWrap");
+    const userInput = document.getElementById("userInput");
+    let selectedFile = null;
+
+    marked.setOptions({ breaks: true, gfm: true });
+
+    userInput.addEventListener("keydown", e => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    function botAvatar() {
+        return `<div class="avatar bot"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>`;
+    }
+
+    function handleFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        selectedFile = file;
+        const bar = document.getElementById("filePreviewBar");
+        const thumb = document.getElementById("fileThumb");
+        const pdfIcon = document.getElementById("filePdfIcon");
+        const nameEl = document.getElementById("fileName");
+        const typeEl = document.getElementById("fileType");
+
+        nameEl.textContent = file.name;
+
+        if (file.type.startsWith("image/")) {
+            typeEl.textContent = "Image";
+            thumb.src = URL.createObjectURL(file);
+            thumb.style.display = "block";
+            pdfIcon.style.display = "none";
+        } else {
+            typeEl.textContent = "PDF Document";
+            thumb.style.display = "none";
+            pdfIcon.style.display = "block";
+        }
+        bar.classList.add("visible");
+    }
+
+    function removeFile() {
+        selectedFile = null;
+        document.getElementById("fileInput").value = "";
+        document.getElementById("filePreviewBar").classList.remove("visible");
+        document.getElementById("fileThumb").src = "";
+    }
+
+    async function sendMessage() {
+        const msg = userInput.value.trim();
+        if (!msg && !selectedFile) return;
+        userInput.value = "";
+
+        const userDiv = document.createElement("div");
+        userDiv.className = "msg user";
+
+        let previewHTML = "";
+        if (selectedFile) {
+            if (selectedFile.type.startsWith("image/")) {
+                const url = URL.createObjectURL(selectedFile);
+                previewHTML = `<img src="${url}" style="max-height:180px;max-width:100%;border-radius:10px;border:1px solid rgba(255,255,255,0.12);display:block;margin-bottom:6px;margin-left:auto;">`;
+            } else {
+                previewHTML = `<div class="attached-file-pill" style="margin-bottom:6px;margin-left:auto">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/></svg>
+                    ${escapeHtml(selectedFile.name)}
+                </div>`;
+            }
+        }
+
+        userDiv.innerHTML = `
+            <div class="avatar user">You</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;max-width:72%">
+                ${previewHTML}
+                ${msg ? `<div class="bubble" style="max-width:100%">${escapeHtml(msg)}</div>` : ""}
+            </div>`;
+        messagesEl.appendChild(userDiv);
+        scrollBottom();
+
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "typing-row";
+        typingDiv.id = "typing";
+        typingDiv.innerHTML = `${botAvatar()}<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+        messagesEl.appendChild(typingDiv);
+        scrollBottom();
+
+        try {
+            const formData = new FormData();
+            formData.append("message", msg);
+            if (selectedFile) formData.append("file", selectedFile);
+
+            const res = await fetch("/chat", { method: "POST", body: formData });
+            const data = await res.json();
+            document.getElementById("typing")?.remove();
+
+            if (data.error) {
+                appendBot(`Error: ${data.error}`);
+            } else {
+                appendBot(data.reply);
+            }
+        } catch {
+            document.getElementById("typing")?.remove();
+            appendBot("Something went wrong. Try again.");
+        }
+
+        removeFile();
+        scrollBottom();
+    }
+
+    function appendBot(text) {
+        const div = document.createElement("div");
+        div.className = "msg bot";
+        div.innerHTML = `${botAvatar()}<div class="bubble">${marked.parse(text)}</div>`;
+        messagesEl.appendChild(div);
+        div.querySelectorAll("pre code").forEach(el => hljs.highlightElement(el));
+    }
+
+    function escapeHtml(t) {
+        return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function scrollBottom() { chatWrap.scrollTop = chatWrap.scrollHeight; }
+
+    async function clearChat() {
+        messagesEl.innerHTML = `
+            <div class="msg bot">
+                ${botAvatar()}
+                <div class="bubble">Hey, I'm <strong>Zeno</strong> — your AI assistant. Ask me anything, or upload an image or PDF!</div>
+            </div>`;
+        await fetch("/clear", { method: "POST" });
+    }
+</script>
+</body>
+</html>
